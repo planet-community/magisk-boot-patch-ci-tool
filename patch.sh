@@ -38,15 +38,15 @@ case "$?" in
     0)
         ;;
     1)
-        echo "CRIT: Unsupported image format or unknown."
+        echo "ERR: Unsupported image format or unknown."
         exit 1
         ;;
     2)
-        echo "CRIT: ChromeOS image, we don't handle those."
+        echo "ERR: ChromeOS image, we don't handle those."
         exit 1
         ;;
     *)
-        echo "CRIT: Unable to unpack image. Corrupted?"
+        echo "ERR: Unable to unpack image. Corrupted?"
         exit 1
         ;;
 esac
