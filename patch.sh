@@ -83,7 +83,7 @@ echo "INFO: Compress Magisk binary.."
 "$MAGISKBOOT" compress=xz "${MAGISK_TMP}"/magisk64 magisk64.xz
 
 echo "INFO: Create new ramdisk for root image.."
-"$MAGISKBOOT cpio ramdisk.cpio" \
+"$MAGISKBOOT" cpio ramdisk.cpio \
 "add 0750 init ${MAGISK_TMP}/magiskinit" \
 "mkdir 0750 overlay.d" \
 "mkdir 0750 overlay.d/sbin" \
