@@ -27,4 +27,8 @@ cp lib/arm64-v8a/libmagiskinit.so "${MAGISK_TMPDIR}"/magiskinit
 
 chmod +x "${MAGISK_TMPDIR}"/magisk*
 
+cd /tmp
+
+rm -rf "${DL_TMPDIR}"
+
 exit
