@@ -6,8 +6,8 @@ get_abs_path() {
 
 set -eu
 
-MAGISK_TMP="/tmp/magiskdl$$"
-MAGISK_VER="${2:-v24.3}"
+MAGISK_TMP="/tmp/magiskdl${$}"
+MAGISK_VER="${2:-v25.1}"
 mkdir -p "${MAGISK_TMP}"
 
 echo "INFO: Downloading Magisk.."
@@ -19,23 +19,23 @@ echo "INFO: Finished downloading Magisk."
 export PATH="${MAGISK_TMP}:${PATH}"
 
 MAGISKBOOT="$(which magiskboot)"
-TMPDIR="/tmp/magiskpatch$$"
+TMPDIR="/tmp/magiskpatch${$}"
 mkdir -p "${TMPDIR}"
 
 BOOTIMAGE="$(get_abs_path $1)"
 
-if [ ! -e "$BOOTIMAGE" ]; then
-    echo "WARN: boot image ($BOOTIMAGE) does NOT exist!"
+if [ ! -e "${BOOTIMAGE}" ]; then
+    echo "WARN: boot image (${BOOTIMAGE}) does NOT exist!"
     exit 1
 fi
 
 # cd to build dir
-cd "$TMPDIR" || exit 1
+cd "${TMPDIR}" || exit 1
 
 echo "INFO: Extracting boot image.."
-"$MAGISKBOOT" unpack "$BOOTIMAGE"
+"${MAGISKBOOT}" unpack "${BOOTIMAGE}"
 
-case "$?" in
+case "${?}" in
     0)
         ;;
     1)
@@ -54,8 +54,8 @@ esac
 
 
 if [ -e "./ramdisk.cpio" ]; then
-    "$MAGISKBOOT" cpio "./ramdisk.cpio" test
-    RAMDISK_STATUS="$?"
+    "${MAGISKBOOT}" cpio "./ramdisk.cpio" test
+    RAMDISK_STATUS="${?}"
 else
     RAMDISK_STATUS=0
 fi
@@ -63,14 +63,15 @@ fi
 case "${RAMDISK_STATUS}" in
     0)
         echo "INFO: Stock boot image detected."
-        SHA1=$("$MAGISKBOOT" sha1 "$BOOTIMAGE" 2>/dev/null)
-        cat "$BOOTIMAGE" > ./stock_boot.img
+        SHA1=$("${MAGISKBOOT}" sha1 "${BOOTIMAGE}" 2>/dev/null)
+        cat "${BOOTIMAGE}" > ./stock_boot.img
         cp -af ./ramdisk.cpio ./ramdisk.cpio.orig 2>/dev/null
+        rm -f stock_boot.img
         ;;
     1)
         echo "INFO: Boot image patched by Magisk."
-        SHA1=$("$MAGISKBOOT" cpio ramdisk.cpio sha1 2>/dev/null)
-        "$MAGISKBOOT" cpio ramdisk.cpio erstore
+        SHA1=$("${MAGISKBOOT}" cpio ramdisk.cpio sha1 2>/dev/null)
+        "${MAGISKBOOT}" cpio ramdisk.cpio erstore
         cp -af ramdisk.cpio ramdisk.cpio.orig
         rm -f stock_boot.img
         ;;
@@ -81,10 +82,10 @@ case "${RAMDISK_STATUS}" in
 esac
 
 echo "INFO: Compress Magisk binary.."
-"$MAGISKBOOT" compress=xz "${MAGISK_TMP}"/magisk64 magisk64.xz
+"${MAGISKBOOT}" compress=xz "${MAGISK_TMP}"/magisk64 magisk64.xz
 
 echo "INFO: Create new ramdisk for root image.."
-"$MAGISKBOOT" cpio ramdisk.cpio \
+"${MAGISKBOOT}" cpio ramdisk.cpio \
 "add 0750 init ${MAGISK_TMP}/magiskinit" \
 "mkdir 0750 overlay.d" \
 "mkdir 0750 overlay.d/sbin" \
@@ -96,12 +97,12 @@ echo "INFO: Create new ramdisk for root image.."
 rm -f ramdisk.cpio.orig config magisk*.xz
 
 echo "INFO: Patching kernel.."
-"$MAGISKBOOT" hexpatch kernel \
+"${MAGISKBOOT}" hexpatch kernel \
   736B69705F696E697472616D667300 \
   77616E745F696E697472616D667300
 
 echo "INFO: Repacking kernel image.."
-"$MAGISKBOOT" repack "$BOOTIMAGE"
+"${MAGISKBOOT}" repack "${BOOTIMAGE}"
 
 echo "Copy root-boot image to /tmp/root-boot.img"
 cp -v ./new-boot.img /tmp/root-boot.img
@@ -112,4 +113,5 @@ echo "Cleaning up.."
 rm -rf "${MAGISK_TMP}" "${TMPDIR}"
 
 echo "Finished."
+
 exit
