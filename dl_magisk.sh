@@ -5,7 +5,7 @@ set -eu
 DL_TMPDIR="$(mktemp -d)"
 MAGISK_TMPDIR="${1}"
 REPO="topjohnwu/Magisk"
-VERSION="${2:-v24.3}"
+VERSION="${2:-v25.1}"
 
 [ ! -e "$(which unzip)" ] && exit 1
 [ ! -e "$(which curl)" ] && exit 1
