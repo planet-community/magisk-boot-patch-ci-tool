@@ -7,7 +7,7 @@ get_abs_path() {
 set -eu
 
 MAGISK_TMP="/tmp/magiskdl${$}"
-MAGISK_VER="${2:-v25.1}"
+MAGISK_VER="${2:-v25.2}"
 mkdir -p "${MAGISK_TMP}"
 
 echo "INFO: Downloading Magisk.."
