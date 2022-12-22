@@ -105,7 +105,7 @@ echo "INFO: Repacking kernel image.."
 "${MAGISKBOOT}" repack "${BOOTIMAGE}"
 
 echo "Copy root-boot image to /tmp/root-boot.img"
-cp -v ./new-boot.img /tmp/root-boot.img
+cp -v ./new-boot.img ./root-boot.img
 
 cd /tmp
 
