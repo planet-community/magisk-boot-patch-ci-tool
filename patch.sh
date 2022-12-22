@@ -71,7 +71,7 @@ case "${RAMDISK_STATUS}" in
     1)
         echo "INFO: Boot image patched by Magisk."
         SHA1=$("${MAGISKBOOT}" cpio ramdisk.cpio sha1 2>/dev/null)
-        "${MAGISKBOOT}" cpio ramdisk.cpio erstore
+        "${MAGISKBOOT}" cpio ramdisk.cpio restore
         cp -af ramdisk.cpio ramdisk.cpio.orig
         rm -f stock_boot.img
         ;;
