@@ -9,7 +9,7 @@ get_abs_path() {
 }
 SCRIPT_RELATIVE_DIR=$(dirname $(realpath "$0"))
 
-MAGISK_DLOUTDIR="$SCRIPT_RELATIVE_DIR/tmp/magiskdldir$$"
+MAGISK_DLOUTDIR="$(mktemp -d)/magiskdldir$$"
 MAGISK_VER="${2:-v25.2}"
 
 echo "INFO: Downloading Magisk.."
@@ -23,7 +23,7 @@ export PATH="${MAGISK_DLOUTDIR}:${PATH}"
 
 MAGISKBOOT="$(which magiskboot)"
 echo $MAGISKBOOT
-TMPDIR="./tmp/magiskpatch${$}"
+TMPDIR="$(mktemp -d)/magiskpatch$$"
 mkdir -p "${TMPDIR}"
 
 # Flags.
@@ -158,7 +158,7 @@ echo "INFO: Repacking kernel image.."
 "${MAGISKBOOT}" repack "${BOOTIMAGE}"
 
 echo "Copy root-boot image to /tmp/root-boot.img"
-cp ./new-boot.img $(dirname ${BOOTIMAGE})/root-boot.img
+cp "${TMPDIR}"/new-boot.img /out/root-boot.img
 
 cd /tmp
 

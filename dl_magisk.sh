@@ -2,7 +2,7 @@
 
 SCRIPT_RELATIVE_DIR=$(dirname $(realpath "$0"))
 
-DL_TMPDIR="$SCRIPT_RELATIVE_DIR/tmp/magiskdl$$"
+DL_TMPDIR="$(mktemp -d)/magiskdl$$"
 MAGISK_DLOUTDIR="${1}"
 REPO="topjohnwu/Magisk"
 VERSION="${2:-v25.2}"
