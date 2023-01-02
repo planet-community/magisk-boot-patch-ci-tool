@@ -52,9 +52,8 @@ case "${?}" in
         ;;
 esac
 
-
 if [ -e "./ramdisk.cpio" ]; then
-    "${MAGISKBOOT}" cpio "./ramdisk.cpio" test
+    "${MAGISKBOOT}" cpio "./ramdisk.cpio" "test"
     RAMDISK_STATUS="${?}"
 else
     RAMDISK_STATUS=0
@@ -66,7 +65,6 @@ case "${RAMDISK_STATUS}" in
         SHA1=$("${MAGISKBOOT}" sha1 "${BOOTIMAGE}" 2>/dev/null)
         cat "${BOOTIMAGE}" > ./stock_boot.img
         cp -af ./ramdisk.cpio ./ramdisk.cpio.orig 2>/dev/null
-        rm -f stock_boot.img
         ;;
     1)
         echo "INFO: Boot image patched by Magisk."
@@ -97,9 +95,23 @@ echo "INFO: Create new ramdisk for root image.."
 rm -f ramdisk.cpio.orig config magisk*.xz
 
 echo "INFO: Patching kernel.."
-"${MAGISKBOOT}" hexpatch kernel \
+if [[ -f kernel ]]; then
+  # Remove Samsung RKP
+  ${MAGISKBOOT} hexpatch kernel \
+  49010054011440B93FA00F71E9000054010840B93FA00F7189000054001840B91FA00F7188010054 \
+  A1020054011440B93FA00F7140020054010840B93FA00F71E0010054001840B91FA00F7181010054
+
+  # Remove Samsung defex
+  # Before: [mov w2, #-221]   (-__NR_execve)
+  # After:  [mov w2, #-32768]
+  ${MAGISKBOOT} hexpatch kernel 821B8012 E2FF8F12
+
+  # Force kernel to load rootfs
+  # skip_initramfs -> want_initramfs
+  ${MAGISKBOOT} hexpatch kernel \
   736B69705F696E697472616D667300 \
   77616E745F696E697472616D667300
+fi
 
 echo "INFO: Repacking kernel image.."
 "${MAGISKBOOT}" repack "${BOOTIMAGE}"
