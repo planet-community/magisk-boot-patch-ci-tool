@@ -101,7 +101,7 @@ echo "INFO: Compress Magisk binary.."
 "${MAGISKBOOT}" compress=xz "${MAGISK_TMP}"/magisk64 magisk64.xz
 
 echo "INFO: Compress stub APK.."
-"${MAGISKBOOT}" compress=xz "${MAGISK_TMP}"/stub.apk stub.xz
+"${MAGISKBOOT}" compress=xz "${MAGISK_TMP}"/stub-release.apk stub.xz
 
 echo "INFO: Create new ramdisk for root image.."
 "${MAGISKBOOT}" cpio ramdisk.cpio \
