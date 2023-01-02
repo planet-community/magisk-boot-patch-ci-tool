@@ -7,24 +7,23 @@
 get_abs_path() {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 }
-
 SCRIPT_RELATIVE_DIR=$(dirname $(realpath "$0"))
 
-
-MAGISK_TMP="/tmp/magiskdl${$}"
+MAGISK_DLOUTDIR="$SCRIPT_RELATIVE_DIR/tmp/magiskdldir$$"
 MAGISK_VER="${2:-v25.2}"
-mkdir -p "${MAGISK_TMP}"
 
 echo "INFO: Downloading Magisk.."
 
-"${SCRIPT_RELATIVE_DIR}"/dl_magisk.sh "${MAGISK_TMP}" "${MAGISK_VER}"
+mkdir -p "${MAGISK_DLOUTDIR}"
+"${SCRIPT_RELATIVE_DIR}"/dl_magisk.sh "${MAGISK_DLOUTDIR}" "${MAGISK_VER}"
 
 echo "INFO: Finished downloading Magisk."
 
-export PATH="${MAGISK_TMP}:${PATH}"
+export PATH="${MAGISK_DLOUTDIR}:${PATH}"
 
 MAGISKBOOT="$(which magiskboot)"
-TMPDIR="/tmp/magiskpatch${$}"
+echo $MAGISKBOOT
+TMPDIR="./tmp/magiskpatch${$}"
 mkdir -p "${TMPDIR}"
 
 # Flags.
@@ -46,6 +45,9 @@ fi
 
 # cd to build dir
 cd "${TMPDIR}" || exit 1
+
+cp "${BOOTIMAGE}" ./boot.img
+BOOTIMAGE="$(get_abs_path ./boot.img)"
 
 echo "INFO: Extracting boot image.."
 "${MAGISKBOOT}" unpack "${BOOTIMAGE}"
@@ -101,14 +103,14 @@ echo "RECOVERYMODE=$RECOVERYMODE" >> config
 [ ! -z $SHA1 ] && echo "SHA1=$SHA1" >> config
 
 echo "INFO: Compress Magisk binary.."
-"${MAGISKBOOT}" compress=xz "${MAGISK_TMP}"/magisk64 magisk64.xz
+"${MAGISKBOOT}" compress=xz "${MAGISK_DLOUTDIR}"/magisk64 magisk64.xz
 
 echo "INFO: Compress stub APK.."
-"${MAGISKBOOT}" compress=xz "${MAGISK_TMP}"/stub-release.apk stub.xz
+"${MAGISKBOOT}" compress=xz "${MAGISK_DLOUTDIR}"/stub-release.apk stub.xz
 
 echo "INFO: Create new ramdisk for root image.."
 "${MAGISKBOOT}" cpio ramdisk.cpio \
-"add 0750 init ${MAGISK_TMP}/magiskinit" \
+"add 0750 init ${MAGISK_DLOUTDIR}/magiskinit" \
 "mkdir 0750 overlay.d" \
 "mkdir 0750 overlay.d/sbin" \
 "add 0644 overlay.d/sbin/magisk64.xz magisk64.xz" \
@@ -125,11 +127,10 @@ rm -f ramdisk.cpio.orig config magisk*.xz stub.xz
 for dt in dtb kernel_dtb extra; do
   if [ -f $dt ]; then
     if ! "${MAGISKBOOT}" dtb $dt test; then
-      ui_print "! Boot image $dt was patched by old (unsupported) Magisk"
-      abort "! Please try again with *unpatched* boot image"
+      echo "! Boot image $dt was patched by old (unsupported) Magisk"
     fi
     if "${MAGISKBOOT}" dtb $dt patch; then
-      ui_print "- Patch fstab in boot image $dt"
+      echo "- Patch fstab in boot image $dt"
     fi
   fi
 done
@@ -157,12 +158,12 @@ echo "INFO: Repacking kernel image.."
 "${MAGISKBOOT}" repack "${BOOTIMAGE}"
 
 echo "Copy root-boot image to /tmp/root-boot.img"
-cp -v ./new-boot.img $(dirname ${BOOTIMAGE})/root-boot.img
+cp ./new-boot.img $(dirname ${BOOTIMAGE})/root-boot.img
 
 cd /tmp
 
 echo "Cleaning up.."
-rm -rf "${MAGISK_TMP}" "${TMPDIR}"
+rm -rf "${MAGISK_DLOUTDIR}" "${TMPDIR}"
 
 echo "Finished."
 
