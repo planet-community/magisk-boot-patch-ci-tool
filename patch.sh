@@ -1,5 +1,9 @@
 #!/bin/sh
 
+## Derived, if not outright copied, from:
+## https://github.com/topjohnwu/Magisk/blob/master/scripts/boot_patch.sh
+## Thanks!
+
 get_abs_path() {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 }
@@ -21,6 +25,16 @@ export PATH="${MAGISK_TMP}:${PATH}"
 MAGISKBOOT="$(which magiskboot)"
 TMPDIR="/tmp/magiskpatch${$}"
 mkdir -p "${TMPDIR}"
+
+# Flags.
+
+[ -z $KEEPVERITY ] && KEEPVERITY=false
+[ -z $KEEPFORCEENCRYPT ] && KEEPFORCEENCRYPT=false
+[ -z $PATCHVBMETAFLAG ] && PATCHVBMETAFLAG=false
+[ -z $RECOVERYMODE ] && RECOVERYMODE=false
+export KEEPVERITY
+export KEEPFORCEENCRYPT
+export PATCHVBMETAFLAG
 
 BOOTIMAGE="$(get_abs_path $1)"
 
@@ -59,7 +73,7 @@ else
     RAMDISK_STATUS=0
 fi
 
-case "${RAMDISK_STATUS}" in
+case $((RAMDISK_STATUS & 3)) in
     0)
         echo "INFO: Stock boot image detected."
         SHA1=$("${MAGISKBOOT}" sha1 "${BOOTIMAGE}" 2>/dev/null)
@@ -79,20 +93,44 @@ case "${RAMDISK_STATUS}" in
         ;;
 esac
 
+echo "KEEPVERITY=$KEEPVERITY" > config
+echo "KEEPFORCEENCRYPT=$KEEPFORCEENCRYPT" >> config
+echo "PATCHVBMETAFLAG=$PATCHVBMETAFLAG" >> config
+echo "RECOVERYMODE=$RECOVERYMODE" >> config
+[ ! -z $SHA1 ] && echo "SHA1=$SHA1" >> config
+
 echo "INFO: Compress Magisk binary.."
 "${MAGISKBOOT}" compress=xz "${MAGISK_TMP}"/magisk64 magisk64.xz
 
+echo "INFO: Compress stub APK.."
+"${MAGISKBOOT}" compress=xz "${MAGISK_TMP}"/stub.apk stub.xz
+
 echo "INFO: Create new ramdisk for root image.."
 "${MAGISKBOOT}" cpio ramdisk.cpio \
-"add 0750 init ${MAGISK_TMP}/magiskinit" \
-"mkdir 0750 overlay.d" \
-"mkdir 0750 overlay.d/sbin" \
-"add 0644 overlay.d/sbin/magisk64.xz magisk64.xz" \
-"patch" \
-"backup ramdisk.cpio.orig" \
-"mkdir 000 .backup"
+    "add 0750 $INIT magiskinit" \
+    "mkdir 0750 overlay.d" \
+    "mkdir 0750 overlay.d/sbin" \
+    "add 0644 overlay.d/sbin/magisk64.xz magisk64.xz" \
+    "add 0644 overlay.d/sbin/stub.xz stub.xz" \
+    "patch" \
+    "backup ramdisk.cpio.orig" \
+    "mkdir 000 .backup" \
 
-rm -f ramdisk.cpio.orig config magisk*.xz
+rm -f ramdisk.cpio.orig config magisk*.xz stub.xz
+
+# DTB patches
+
+for dt in dtb kernel_dtb extra; do
+  if [ -f $dt ]; then
+    if ! "${MAGISKBOOT}" dtb $dt test; then
+      ui_print "! Boot image $dt was patched by old (unsupported) Magisk"
+      abort "! Please try again with *unpatched* boot image"
+    fi
+    if "${MAGISKBOOT}" dtb $dt patch; then
+      ui_print "- Patch fstab in boot image $dt"
+    fi
+  fi
+done
 
 echo "INFO: Patching kernel.."
 if [[ -f kernel ]]; then
