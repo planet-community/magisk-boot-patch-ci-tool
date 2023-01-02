@@ -8,8 +8,6 @@ get_abs_path() {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 }
 
-set -eu
-
 MAGISK_TMP="/tmp/magiskdl${$}"
 MAGISK_VER="${2:-v25.2}"
 mkdir -p "${MAGISK_TMP}"
@@ -107,14 +105,15 @@ echo "INFO: Compress stub APK.."
 
 echo "INFO: Create new ramdisk for root image.."
 "${MAGISKBOOT}" cpio ramdisk.cpio \
-    "add 0750 $INIT magiskinit" \
-    "mkdir 0750 overlay.d" \
-    "mkdir 0750 overlay.d/sbin" \
-    "add 0644 overlay.d/sbin/magisk64.xz magisk64.xz" \
-    "add 0644 overlay.d/sbin/stub.xz stub.xz" \
-    "patch" \
-    "backup ramdisk.cpio.orig" \
-    "mkdir 000 .backup" \
+"add 0750 init ${MAGISK_TMP}/magiskinit" \
+"mkdir 0750 overlay.d" \
+"mkdir 0750 overlay.d/sbin" \
+"add 0644 overlay.d/sbin/magisk64.xz magisk64.xz" \
+"add 0644 overlay.d/sbin/stub.xz stub.xz" \
+"patch" \
+"backup ramdisk.cpio.orig" \
+"mkdir 000 .backup" \
+"add 000 .backup/.magisk config"
 
 rm -f ramdisk.cpio.orig config magisk*.xz stub.xz
 
