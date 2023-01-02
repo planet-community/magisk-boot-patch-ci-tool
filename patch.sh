@@ -8,7 +8,7 @@ get_abs_path() {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 }
 
-SCRIPT_RELATIVE_DIR=$(dirname "${BASH_SOURCE[0]}") 
+SCRIPT_RELATIVE_DIR=$(dirname $(realpath "$0"))
 
 
 MAGISK_TMP="/tmp/magiskdl${$}"
@@ -17,7 +17,7 @@ mkdir -p "${MAGISK_TMP}"
 
 echo "INFO: Downloading Magisk.."
 
-"$SCRIPT_RELATIVE_DIR"/dl_magisk.sh "${MAGISK_TMP}" "${MAGISK_VER}"
+"${SCRIPT_RELATIVE_DIR}"/dl_magisk.sh "${MAGISK_TMP}" "${MAGISK_VER}"
 
 echo "INFO: Finished downloading Magisk."
 
