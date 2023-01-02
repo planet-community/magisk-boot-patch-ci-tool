@@ -132,7 +132,7 @@ for dt in dtb kernel_dtb extra; do
 done
 
 echo "INFO: Patching kernel.."
-if [[ -f kernel ]]; then
+if [ -f kernel ]; then
   # Remove Samsung RKP
   ${MAGISKBOOT} hexpatch kernel \
   49010054011440B93FA00F71E9000054010840B93FA00F7189000054001840B91FA00F7188010054 \
