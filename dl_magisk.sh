@@ -15,6 +15,7 @@ VERSION="${2:-v25.2}"
 cd "${DL_TMPDIR}"
 
 curl -Lso Magisk-"${VERSION}".apk https://github.com/"${REPO}"/releases/download/"${VERSION}"/Magisk-"${VERSION}".apk
+curl -Lso Magisk-"${VERSION}"-stub.apk https://github.com/"${REPO}"/releases/download/"${VERSION}"/stub-release.apk
 
 mkdir -p extract && cd extract
 
