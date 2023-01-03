@@ -5,26 +5,27 @@
 ## Thanks!
 
 get_abs_path() {
-    echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
+    echo "$(cd "$(dirname "${1}")"; pwd)/$(basename "${1}")"
 }
-SCRIPT_RELATIVE_DIR=$(dirname $(realpath "$0"))
+SCRIPT_RELATIVE_DIR=$(dirname $(realpath "${0}"))
 
-MAGISK_DLOUTDIR="$(mktemp -d)/magiskdldir$$"
-MAGISK_VER="${2:-v25.2}"
+BOOTIMAGE="$(get_abs_path ${1})"
+MAGISK_VERSION="${2:-v25.2}"
 
 echo "INFO: Downloading Magisk.."
 
-mkdir -p "${MAGISK_DLOUTDIR}"
-"${SCRIPT_RELATIVE_DIR}"/dl_magisk.sh "${MAGISK_DLOUTDIR}" "${MAGISK_VER}"
+MAGISK_DLOUTDIR=$("${SCRIPT_RELATIVE_DIR}"/dl_magisk.sh "${MAGISK_VERSION}")
 
 echo "INFO: Finished downloading Magisk."
 
 export PATH="${MAGISK_DLOUTDIR}:${PATH}"
 
 MAGISKBOOT="$(which magiskboot)"
-echo $MAGISKBOOT
-TMPDIR="$(mktemp -d)/magiskpatch$$"
-mkdir -p "${TMPDIR}"
+TMPDIR="$(mktemp -d)/magiskpatch$$" && mkdir -p "${TMPDIR}" || {
+    echo "Unable to create temporary directory at: ${TMPDIR}"
+    echo "Please check permissions, and try again."
+    exit 1
+}
 
 # Flags.
 
@@ -36,18 +37,16 @@ export KEEPVERITY
 export KEEPFORCEENCRYPT
 export PATCHVBMETAFLAG
 
-BOOTIMAGE="$(get_abs_path $1)"
-
 if [ ! -e "${BOOTIMAGE}" ]; then
     echo "WARN: boot image (${BOOTIMAGE}) does NOT exist!"
     exit 1
 fi
 
 # cd to build dir
-cd "${TMPDIR}" || exit 1
-
-cp "${BOOTIMAGE}" ./boot.img
-BOOTIMAGE="$(get_abs_path ./boot.img)"
+cd "${TMPDIR}" || {
+    echo "Unable to change directory to: ${TMPDIR}."
+    exit 1
+}
 
 echo "INFO: Extracting boot image.."
 "${MAGISKBOOT}" unpack "${BOOTIMAGE}"
