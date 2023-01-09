@@ -156,8 +156,17 @@ fi
 echo "INFO: Repacking kernel image.."
 "${MAGISKBOOT}" repack "${BOOTIMAGE}"
 
-echo "Copy root-boot image to /tmp/root-boot.img"
-cp "${TMPDIR}"/new-boot.img /out/root-boot.img
+
+# Check `/out` exits, if not, write to local dir.
+
+if [ -d "/out" ]; then
+    echo "Copy root-boot image to /out/root-boot.img"
+    cp "${TMPDIR}"/new-boot.img /out/root-boot.img
+else 
+    echo "Copy root-boot image to $(dirname "$BOOTIMAGE")/root-boot.img"
+    cp "${TMPDIR}"/new-boot.img "$(dirname "$BOOTIMAGE")/root-boot.img"
+fi
+
 
 cd /tmp
 
