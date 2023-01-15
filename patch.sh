@@ -5,23 +5,24 @@
 ## Thanks!
 
 get_abs_path() {
-    echo "$(cd "$(dirname "${1}")"; pwd)/$(basename "${1}")"
+    echo "$(cd "$(dirname "${1}")" || exit 1; pwd)/$(basename "${1}")"
 }
-SCRIPT_RELATIVE_DIR=$(dirname $(realpath "${0}"))
+SCRIPT_RELATIVE_DIR=$(dirname "$(realpath "${0}")")
 
-BOOTIMAGE="$(get_abs_path ${1})"
+BOOTIMAGE="$(get_abs_path "${1}")"
 MAGISK_VERSION="${2:-v25.2}"
 
 echo "INFO: Downloading Magisk.."
 
-MAGISK_DLOUTDIR=$(""${SCRIPT_RELATIVE_DIR}"/dl_magisk.sh" "${MAGISK_VERSION}")
+MAGISK_DLOUTDIR="$("${SCRIPT_RELATIVE_DIR}/dl_magisk.sh" "${MAGISK_VERSION}")"
 
 echo "INFO: Finished downloading Magisk."
 
 export PATH="${MAGISK_DLOUTDIR}:${PATH}"
 
 MAGISKBOOT="$(which magiskboot)"
-TMPDIR="$(mktemp -d)/magiskpatch$$" && mkdir -p "${TMPDIR}" || {
+TMPDIR="$(mktemp -d)/magiskpatch$$"
+mkdir -p "${TMPDIR}" || {
     echo "Unable to create temporary directory at: ${TMPDIR}"
     echo "Please check permissions, and try again."
     exit 1
@@ -29,10 +30,11 @@ TMPDIR="$(mktemp -d)/magiskpatch$$" && mkdir -p "${TMPDIR}" || {
 
 # Flags.
 
-[ -z $KEEPVERITY ] && KEEPVERITY=false
-[ -z $KEEPFORCEENCRYPT ] && KEEPFORCEENCRYPT=false
-[ -z $PATCHVBMETAFLAG ] && PATCHVBMETAFLAG=false
-[ -z $RECOVERYMODE ] && RECOVERYMODE=false
+[ -z "${KEEPVERITY}" ] && KEEPVERITY=false
+[ -z "${KEEPFORCEENCRYPT}" ] && KEEPFORCEENCRYPT=false
+[ -z "${PATCHVBMETAFLAG}" ] && PATCHVBMETAFLAG=false
+[ -z "${RECOVERYMODE}" ] && RECOVERYMODE=false
+
 export KEEPVERITY
 export KEEPFORCEENCRYPT
 export PATCHVBMETAFLAG
@@ -95,11 +97,14 @@ case $((RAMDISK_STATUS & 3)) in
         ;;
 esac
 
-echo "KEEPVERITY=$KEEPVERITY" > config
-echo "KEEPFORCEENCRYPT=$KEEPFORCEENCRYPT" >> config
-echo "PATCHVBMETAFLAG=$PATCHVBMETAFLAG" >> config
-echo "RECOVERYMODE=$RECOVERYMODE" >> config
-[ ! -z $SHA1 ] && echo "SHA1=$SHA1" >> config
+{
+    echo "KEEPVERITY=${KEEPVERITY}"
+    echo "KEEPFORCEENCRYPT=${KEEPFORCEENCRYPT}"
+    echo "PATCHVBMETAFLAG=${PATCHVBMETAFLAG}"
+    echo "RECOVERYMODE=${RECOVERYMODE}"
+} >> config
+
+[ -n "${SHA1}" ] && echo "SHA1=${SHA1}" >> config
 
 echo "INFO: Compress Magisk binary.."
 "${MAGISKBOOT}" compress=xz "${MAGISK_DLOUTDIR}"/magisk64 magisk64.xz
@@ -124,12 +129,12 @@ rm -f ramdisk.cpio.orig config magisk*.xz stub.xz
 # DTB patches
 
 for dt in dtb kernel_dtb extra; do
-  if [ -f $dt ]; then
-    if ! "${MAGISKBOOT}" dtb $dt test; then
-      echo "! Boot image $dt was patched by old (unsupported) Magisk"
+  if [ -f "${dt}" ]; then
+    if ! "${MAGISKBOOT}" dtb "${dt}" test; then
+      echo "! Boot image ${dt} was patched by old (unsupported) Magisk"
     fi
-    if "${MAGISKBOOT}" dtb $dt patch; then
-      echo "- Patch fstab in boot image $dt"
+    if "${MAGISKBOOT}" dtb "${dt}" patch; then
+      echo "- Patch fstab in boot image ${dt}"
     fi
   fi
 done
@@ -167,8 +172,6 @@ else
     cp "${TMPDIR}"/new-boot.img "$(dirname "$BOOTIMAGE")/root-boot.img"
 fi
 
-
-cd /tmp
 
 echo "Cleaning up.."
 rm -rf "${MAGISK_DLOUTDIR}" "${TMPDIR}"
