@@ -14,7 +14,7 @@ MAGISK_VERSION="${2:-v25.2}"
 
 echo "INFO: Downloading Magisk.."
 
-MAGISK_DLOUTDIR=$("${SCRIPT_RELATIVE_DIR}"/dl_magisk.sh "${MAGISK_VERSION}")
+MAGISK_DLOUTDIR=$(""${SCRIPT_RELATIVE_DIR}"/dl_magisk.sh" "${MAGISK_VERSION}")
 
 echo "INFO: Finished downloading Magisk."
 
