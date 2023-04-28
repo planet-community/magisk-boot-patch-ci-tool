@@ -10,7 +10,7 @@ get_abs_path() {
 SCRIPT_RELATIVE_DIR=$(dirname "$(realpath "${0}")")
 
 BOOTIMAGE="$(get_abs_path "${1}")"
-MAGISK_VERSION="${2:-v25.2}"
+MAGISK_VERSION="${2:-v26.1}"
 
 echo "INFO: Downloading Magisk.."
 

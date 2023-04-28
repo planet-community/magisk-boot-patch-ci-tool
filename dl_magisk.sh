@@ -5,7 +5,7 @@ SCRIPT_RELATIVE_DIR=$(dirname $(realpath "${0}"))
 MAGISK_DLTMPDIR="$(mktemp -d)/magiskdl${$}"
 MAGISK_DLOUTDIR="$(mktemp -d)/magiskdltmp${$}"
 REPO="topjohnwu/Magisk"
-VERSION="${2:-v25.2}"
+VERSION="${2:-v26.1}"
 
 mkdir -p "${MAGISK_DLTMPDIR}" && cd "${MAGISK_DLTMPDIR}" || {
     echo "Unable to create temporary download directory at: ${MAGISK_DLTMPDIR}."
